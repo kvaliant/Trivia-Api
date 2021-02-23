@@ -144,7 +144,7 @@ POST '/quizzes'
     }
 }
 
-POST '/questions/<int:question_id>'
+DELETE '/questions/<int:question_id>'
 - Remove question that match question_id
 - Request Arguments: Int question_id
 - Returns: success boolean, static deleted messege
