@@ -3,6 +3,7 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
+
 import sys
 
 # Please change sys.path to your own directory
@@ -67,12 +68,15 @@ def create_app(test_config=None):
     categories = Category.query.all()
     formatted_category = [category.type for category in categories]
 
-    return jsonify({
-        'success': True,
-        'questions': formatted_questions[start:end],
-        'total_questions': len(formatted_questions),
-        'categories': formatted_category
-    })
+    if formatted_questions[start:end] == []:
+      abort(404)
+    else:
+      return jsonify({
+          'success': True,
+          'questions': formatted_questions[start:end],
+          'total_questions': len(formatted_questions),
+          'categories': formatted_category
+      })
   '''
   @TODO DONE: 
   Create an endpoint to DELETE question using a question ID. 
@@ -82,13 +86,16 @@ def create_app(test_config=None):
   '''
   @app.route('/questions/<int:question_id>', methods=['DELETE'])
   def delete_question(question_id):
-    question = Question.query.filter(Question.id == question_id).first()
-    question.delete()
+    try:
+      question = Question.query.filter(Question.id == question_id).first()
+      question.delete()
 
-    return jsonify({
-        'success': True,
-        'deleted': 1
-    })
+      return jsonify({
+          'success': True,
+          'deleted': 1
+      })
+    except:
+      abort(404)
   '''
   @TODO DONE: 
   Create an endpoint to POST a new question, 
@@ -102,18 +109,29 @@ def create_app(test_config=None):
   @app.route('/questions', methods=['POST'])
   def add_question():
     data = request.get_json()
-    new_question = data.get('question', None)
-    new_answer = data.get('answer', None)
-    new_category = data.get('category', None)
-    new_difficulty = data.get('difficulty', None)
-    question = Question(question= new_question, answer= new_answer, category= new_category, difficulty= new_difficulty)
-    question.insert()
+    
+    #route to search_question if 'searchTerm' is in request.get_json()
+    if 'searchTerm' in data:
+      return search_question(data)
 
-    return jsonify({
-        'success': True,
-    })
+    try:
+      new_question = data.get('question', None)
+      new_answer = data.get('answer', None)
+      new_category = data.get('category', None)
+      new_difficulty = data.get('difficulty', None)
+      if(new_question == None or new_answer == None or new_category == None or new_difficulty == None):
+        abort(422)  
+      else:
+        question = Question(question= new_question, answer= new_answer, category= new_category, difficulty= new_difficulty)
+        question.insert()
+        
+        return jsonify({
+            'success': True,
+        })
+    except:
+      abort(422)
   '''
-  @TODO: 
+  @TODO DONE: 
   Create a POST endpoint to get questions based on a search term. 
   It should return any questions for whom the search term 
   is a substring of the question. 
@@ -122,7 +140,20 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
-
+  def search_question(data):
+    searchTerm = data.get('searchTerm', None)
+    questions = Question.query.filter(Question.question.ilike('%'+searchTerm+'%')).all()
+    
+    formatted_questions = [question.format() for question in questions]
+    
+    if formatted_questions == []:
+      abort(404)
+    else:
+      return jsonify({
+          'success': True,
+          'questions': formatted_questions,
+          'total_question': len(formatted_questions)
+      })
   '''
   @TODO DONE: 
   Create a GET endpoint to get questions based on category. 
@@ -138,15 +169,16 @@ def create_app(test_config=None):
 
     categories = Category.query.all()
     formatted_category = [category.format() for category in categories]
-
-    return jsonify({
-        'success': True,
-        'questions': formatted_questions,
-        'total_questions': len(formatted_questions),
-        'current_category': formatted_category[0]
-    })
+    if formatted_questions == []:
+      abort(404)
+    else:
+      return jsonify({
+          'success': True,
+          'questions': formatted_questions,
+          'total_questions': len(formatted_questions)
+      })
   '''
-  @TODO: 
+  @TODO DONE: 
   Create a POST endpoint to get questions to play the quiz. 
   This endpoint should take category and previous question parameters 
   and return a random questions within the given category, 
@@ -159,17 +191,19 @@ def create_app(test_config=None):
   @app.route('/quizzes', methods=['POST'])
   def get_next_question():
     data = request.get_json()
-    previous_question = data.get('previous_questions', None)
+    previous_questions = data.get('previous_questions', None)
     quiz_category = data.get('quiz_category', None).get('id', None)
 
-    questions = Question.query.filter(Question.category == quiz_category).all()
-    #question = Question(question=quiz_category, answer='a',difficulty=1 ,category='1')
-    
+    questions = Question.query.filter(Question.category == quiz_category, Question.id.notin_(previous_questions)).all()
     formatted_questions = [question.format() for question in questions]
-
-    return jsonify({
-        'question': formatted_questions[1],
-    })
+    if len(formatted_questions) == 0:
+      return jsonify({'success': True}) 
+    else:
+      value = random.randint(0, len(formatted_questions)-1)
+      return jsonify({
+        'success': True,
+        'question': formatted_questions[value],
+      })
   '''
   @TODO DONE: 
   Create error handlers for all expected errors 
@@ -190,6 +224,23 @@ def create_app(test_config=None):
       "error": 422,
       "message": "unprocessable entity"
     })
+
+  @app.errorhandler(400)
+  def bad_request(error):
+    return jsonify({
+      "success": False,
+      "error": 400,
+      "message": "bad request"
+    })
+  
+  @app.errorhandler(500)
+  def internal_server_error(error):
+    return jsonify({
+      "success": False,
+      "error": 500,
+      "message": "internal server error"
+    })
+
   return app
 
     
