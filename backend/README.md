@@ -66,15 +66,18 @@ One note before you delve into your tasks: for each endpoint you are expected to
 8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
 9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
 
+
 REVIEW_COMMENT
 ```
 This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
 
 Endpoints
 GET '/categories'
-GET ...
-POST ...
-DELETE ...
+GET '/questions'
+GET '/categories/<int:category_id>/questions'
+POST '/questions'
+POST '/quizzes'
+DELETE '/questions/<int:question_id>'
 
 GET '/categories'
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
@@ -87,8 +90,69 @@ GET '/categories'
 '5' : "Entertainment",
 '6' : "Sports"}
 
-```
+GET '/questions'
+- Fetches 
+    -a dictionary of categories as seen with GET '/categories'
+    -a dictionary of questions with pagination by 10 if ?page=<int:page> exist
+    -count of all question item in database
+- Request Arguments: page=<int:page> (Optional)
+- Returns: An object with of categories, an object of questions, success bool indicator, count of all questions.
+{'categories':[…]
+'questions':[…]
+'success':true
+'total_questions':54}
 
+GET '/categories/<int:category_id>/questions'
+- Fetches 
+    -a dictionary of all question that categories match category_id argument
+    -count of all question item filtered by category_id argument
+- Request Arguments: Int category_id
+- Returns: An object of questions, success bool indicator, count of questions filtered by category
+{'questions':[…]
+'success':true
+'total_questions':23}
+
+POST '/questions'
+Depenging on Request Argument can either 'add_question' or 'search_question'
+-for 'add_question'
+    - Post new question to database
+    - Request Arguments: String question, String answer, Int category, Int difficulty
+    - Returns: success boolean
+    {'success':true}
+-for 'search_question'
+    - Fetches 
+        -a dictionary of all question that categories match String searchTerm argument
+        -count of all question item filtered by category_id argument
+    - Request Arguments: String searchTerm
+    - Returns: success boolean, questions
+    {'success': true,
+    'questions': […],
+    'total_question': 15
+    }
+
+POST '/quizzes'
+- Fetches random question that category_id's match quiz_category and id's are not inside previous_question
+- Request Arguments: Int quiz_category, Int[] previous_questions
+- Returns: success boolean, one question item
+{'success': true,
+'question': {
+    'answer':'Jackson Pollock',
+    'category':2,
+    'difficulty'2,
+    'id':19,
+    'question':'Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?'
+    }
+}
+
+POST '/questions/<int:question_id>'
+- Remove question that match question_id
+- Request Arguments: Int question_id
+- Returns: success boolean, static deleted messege
+{'success': true,
+'deleted': 1
+}
+
+```
 
 ## Testing
 To run the tests, run

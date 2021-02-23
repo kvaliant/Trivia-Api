@@ -193,8 +193,15 @@ def create_app(test_config=None):
     data = request.get_json()
     previous_questions = data.get('previous_questions', None)
     quiz_category = data.get('quiz_category', None).get('id', None)
+    category_type = data.get('quiz_category', None).get('type', None)
 
-    questions = Question.query.filter(Question.category == quiz_category, Question.id.notin_(previous_questions)).all()
+    category = {}
+    #if 'ALL' category option were taken
+    if category_type == 'click':
+      questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
+    else:
+      questions = Question.query.filter(Question.category == quiz_category, Question.id.notin_(previous_questions)).all()
+
     formatted_questions = [question.format() for question in questions]
     if len(formatted_questions) == 0:
       return jsonify({'success': True}) 
