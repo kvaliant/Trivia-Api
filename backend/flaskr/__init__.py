@@ -166,16 +166,16 @@ def create_app(test_config=None):
     questions = Question.query.filter(Question.category == category_id).all()
     formatted_questions = [question.format() for question in questions]
 
-    category = Category.query.filter(Category.id == category_id).first()
-    formatted_category = category.format()
-    if formatted_questions == []:
+    category = Category.query.filter(Category.id == category_id).one_or_none()
+    if formatted_questions == [] or category is None:
       abort(404)
     else:
+      formatted_category = category.format()
       return jsonify({
-          'success': True,
-          'questions': formatted_questions,
-          'total_questions': len(formatted_questions),
-          'current_category': formatted_category
+        'success': True,
+        'questions': formatted_questions,
+        'total_questions': len(formatted_questions),
+        'current_category': formatted_category
       })
   '''
   @TODO DONE: 

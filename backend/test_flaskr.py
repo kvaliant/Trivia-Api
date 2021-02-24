@@ -57,13 +57,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['error'], 404)
 
-    '''def test_delete_questions(self):
+    def test_delete_questions(self):
         res = self.client().delete('/questions/9')
         data = json.loads(res.data)
         
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 1)'''
+        self.assertEqual(data['deleted'], 1)
     
     def test_error_delete_questions(self):
         res = self.client().delete('/questions/1000')
