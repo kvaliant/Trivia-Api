@@ -6,9 +6,8 @@ import random
 
 import sys
 
-# Please change sys.path to your own directory
-sys.path.insert(1, '/DOCUMENTS/Programming/Trivia-Api')
-from backend.models import setup_db, Question, Category
+sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from models import setup_db, Question, Category
 
 
 QUESTIONS_PER_PAGE = 10
@@ -39,7 +38,7 @@ def create_app(test_config=None):
   @app.route('/categories', methods=['GET'])
   def get_categories():
     categories = Category.query.all()
-    formatted_category = [category.type for category in categories]
+    formatted_category = [category.format() for category in categories]
     
     return jsonify({
         'success': True,
@@ -66,7 +65,7 @@ def create_app(test_config=None):
     formatted_questions = [question.format() for question in questions]
 
     categories = Category.query.all()
-    formatted_category = [category.type for category in categories]
+    formatted_category = [category.format() for category in categories]
 
     if formatted_questions[start:end] == []:
       abort(404)
